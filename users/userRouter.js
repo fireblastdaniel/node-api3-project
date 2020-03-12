@@ -121,7 +121,6 @@ function validateUserId(req, res, next) {
 }
 
 function validateUser(req, res, next) {
-  console.log(req.body);
   const user = req.body;
   !user ? res.status(400).json({ message: 'missing user data' }) : null;
   !user.name
