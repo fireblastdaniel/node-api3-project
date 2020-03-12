@@ -1,14 +1,37 @@
 const express = require('express');
 
 const Users = require('./userDb');
+const Posts = require('../posts/postDb');
 const router = express.Router();
 
-router.post('/', (req, res) => {
-  // do your magic!
+//201
+//400 --> validateUser
+//500
+//WORKING
+router.post('/', validateUser, (req, res) => {
+  const user = req.body;
+  Users.insert(user)
+    .then(resource => {
+      res.status(200).json(resource);
+    })
+    .catch(error =>
+      res.status(500).json({ message: 'There was an error adding the user.' })
+    );
 });
 
-router.post('/:id/posts', (req, res) => {
-  // do your magic!
+//201
+//400 --> validateUserId, validatePost
+//500
+//WORKING
+router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
+  const post = req.body;
+  const { id } = req.params;
+  post.user_id = id;
+  Posts.insert(post)
+    .then(resource => res.status(200).json(resource))
+    .catch(error =>
+      res.status(500).json({ message: 'There was an error adding the post' })
+    );
 });
 
 //200
@@ -29,13 +52,15 @@ router.get('/', (req, res) => {
 //200
 //400 --> validateUserId
 //500 --> validateUserId
+//WORKING
 router.get('/:id', validateUserId, (req, res) => {
   res.status(200).json(req.user);
 });
 
 //200
 //400 --> validateUserId
-//500 --> validateUserId,
+//500 --> validateUserId, getUserPosts
+//WORKING
 router.get('/:id/posts', validateUserId, (req, res) => {
   const { id } = req.params;
   Users.getUserPosts(id)
@@ -47,12 +72,31 @@ router.get('/:id/posts', validateUserId, (req, res) => {
     );
 });
 
-router.delete('/:id', (req, res) => {
-  // do your magic!
+//200
+//400 --> validateUserId
+//500
+//WORKING
+router.delete('/:id', validateUserId, (req, res) => {
+  const { id } = req.params;
+  Users.remove(id)
+    .then(deleted => res.status(200).json({ message: 'Delete successful' }))
+    .catch(error =>
+      res.status(500).json({ message: 'There was an error deleting the user' })
+    );
 });
 
-router.put('/:id', (req, res) => {
-  // do your magic!
+//200
+//400 --> validateUserId
+//500
+//
+router.put('/:id', validateUserId, (req, res) => {
+  const { id } = req.params;
+  const changes = req.body;
+  Users.update(id, changes)
+    .then(updated => res.status(200).json({ message: 'Update successful' }))
+    .catch(error =>
+      res.status(500).json({ message: 'There was a problem updating the user' })
+    );
 });
 
 //custom middleware
@@ -77,6 +121,7 @@ function validateUserId(req, res, next) {
 }
 
 function validateUser(req, res, next) {
+  console.log(req.body);
   const user = req.body;
   !user ? res.status(400).json({ message: 'missing user data' }) : null;
   !user.name
